@@ -27,5 +27,15 @@ RUN apt-get install -y \
 WORKDIR /workspaces/writing-os-in-1000-lines/src
 RUN curl -LO https://github.com/qemu/qemu/raw/v8.0.4/pc-bios/opensbi-riscv32-generic-fw_dynamic.bin
 
-RUN useradd -m -d /home/mikiken -s /bin/bash mikiken
-USER mikiken
+ARG USERNAME=mikiken
+ARG USER_UID=1000
+ARG USER_GID=$USER_UID
+
+RUN groupadd --gid $USER_GID $USERNAME \
+    && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME \
+    && apt-get update \
+    && apt-get install -y sudo \
+    && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
+    && chmod 0440 /etc/sudoers.d/$USERNAME
+    
+USER $USERNAME
