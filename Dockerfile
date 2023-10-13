@@ -24,9 +24,6 @@ RUN apt-get install -y \
     qemu-system-riscv32 \
     curl
 
-WORKDIR /workspaces/writing-os-in-1000-lines/src
-RUN curl -LO https://github.com/qemu/qemu/raw/v8.0.4/pc-bios/opensbi-riscv32-generic-fw_dynamic.bin
-
 ARG USERNAME=mikiken
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
@@ -37,5 +34,4 @@ RUN groupadd --gid $USER_GID $USERNAME \
     && apt-get install -y sudo \
     && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
     && chmod 0440 /etc/sudoers.d/$USERNAME
-    
-USER $USERNAME
+USER mikiken
