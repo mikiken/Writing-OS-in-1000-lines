@@ -24,6 +24,21 @@ RUN apt-get install -y \
     qemu-system-riscv32 \
     curl
 
+# RISC-VのGCCツールチェーンをビルドするためのスクリプト等をダウンロード
+RUN git config --global http.postBuffer 524288000
+RUN git config --global ssh.postBuffer 524288000
+RUN git clone --depth=1 --recurse-submodules --shallow-submodules https://github.com/riscv-collab/riscv-gnu-toolchain.git
+
+# RISC-V 32ビット用のツールチェーンをビルド
+WORKDIR /riscv-gnu-toolchain
+RUN ./configure --prefix=/opt/riscv32 --with-arch=rv32i --with-abi=ilp32 && \
+    make
+
+# 環境変数を設定して、ツールチェーンが見つかるようにする
+ENV PATH="/opt/riscv32/bin:${PATH}"
+
+WORKDIR /workspaces/writing-os-in-1000-lines/
+
 ARG USERNAME=mikiken
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
