@@ -1,7 +1,7 @@
 #!/bin/bash
 set -xue
 
-# QEMUのファイルパス
+# QEMUの実行バイナリへのパス
 QEMU=qemu-system-riscv32
 
 # QEMUを起動
