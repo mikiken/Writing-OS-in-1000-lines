@@ -32,6 +32,9 @@ void kernel_main(void) {
     printf("\n\nHello World!\n");
     printf("2 + 8 * 5 = %d, %x\n", 2 + 8 * 5, 0x1234abcd);
 
+    PANIC("booted!");
+    printf("unreachable here!\n");
+
     for (;;)
         __asm __volatile__("wfi");
 }
