@@ -16,3 +16,5 @@ boot : kernel
 				$(QEMU) $(QEMU_OPTION) -kernel kernel.elf
 clean:
 				rm *.elf *.map *.o
+
+.PHONY: kernel boot clean
