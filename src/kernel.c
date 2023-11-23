@@ -48,7 +48,7 @@ __attribute__((naked)) void switch_context(uint32_t *prev_sp, uint32_t *next_sp)
     __asm__ __volatile__(
         "addi sp, sp, -13 * 4\n"
 
-        // save registers of the process to be switched out to kernel stack
+        // save callee-saved registers
         "sw ra,  0 * 4(sp)\n"
         "sw s0,  1 * 4(sp)\n"
         "sw s1,  2 * 4(sp)\n"
@@ -64,7 +64,7 @@ __attribute__((naked)) void switch_context(uint32_t *prev_sp, uint32_t *next_sp)
         "sw s11, 12 * 4(sp)\n"
         "sw sp, (a0)\n"
 
-        // set the register value of the process to be switched in
+        // restore callee-saved registers
         "lw sp, (a1)\n"
         "lw ra,  0 * 4(sp)\n"
         "lw s0,  1 * 4(sp)\n"
