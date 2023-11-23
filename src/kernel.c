@@ -138,6 +138,11 @@ void yield(void) {
     if (next == current_proc)
         return;
 
+    __asm__ __volatile__(
+        "csrw sscratch, %[sscratch]\n"
+        :
+        : [sscratch] "r"((uint32_t)&next->stack[sizeof(next->stack)]));
+
     // switch context
     struct process *prev = current_proc;
     current_proc = next;
@@ -173,7 +178,10 @@ __attribute__((naked))
 __attribute__((aligned(4))) void
 kernel_entry(void) {
     __asm__ __volatile__(
-        "csrw sscratch, sp\n"    // save sp when an exception occured
+        // retrieve the kernel stack of the running process from sscratch
+        // tmp = sp; sp = sscratch; sscratch = tmp;
+        "csrrw sp, sscratch, sp\n" // save sp when an exception occured
+
         "addi sp, sp, -4 * 31\n" // allocate stack area to save registers
 
         /* save registers as memory map is consistent with `struct trap_frame` */
@@ -210,6 +218,10 @@ kernel_entry(void) {
 
         "csrr a0, sscratch\n" // load caller's sp
         "sw a0, 4 * 30(sp)\n" // save caller's sp to the stack
+
+        /* reset kernel stack */
+        "addi a0, sp, 4 * 31\n"
+        "csrw sscratch, a0\n"
 
         /* a0 is used as the first argument of handle_trap,
          * and a0 represents the beginning address of trap_frame */
