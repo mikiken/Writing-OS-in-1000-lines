@@ -120,6 +120,30 @@ struct process *create_process(uint32_t pc) {
     return proc;
 }
 
+struct process *current_proc;
+struct process *idle_proc;
+
+void yield(void) {
+    // find runnable process
+    struct process *next = idle_proc;
+    for (int i = 0; i < PROCS_MAX; i++) {
+        struct process *proc = &procs[(current_proc->pid + i) % PROCS_MAX];
+        if (proc->state == PROC_RUNNABLE && proc->pid > 0) {
+            next = proc;
+            break;
+        }
+    }
+
+    // if no runnable process exists except for current process, just return
+    if (next == current_proc)
+        return;
+
+    // switch context
+    struct process *prev = current_proc;
+    current_proc = next;
+    switch_context(&prev->sp, &next->sp);
+}
+
 struct process *proc_a;
 struct process *proc_b;
 
@@ -127,7 +151,7 @@ void proc_a_entry(void) {
     printf("starting process A\n");
     while (1) {
         putchar('A');
-        switch_context(&proc_a->sp, &proc_b->sp);
+        yield();
 
         for (int i = 0; i < 3000000; i++)
             __asm__ __volatile__("nop");
@@ -138,7 +162,7 @@ void proc_b_entry(void) {
     printf("starting process B\n");
     while (1) {
         putchar('B');
-        switch_context(&proc_b->sp, &proc_a->sp);
+        yield();
 
         for (int i = 0; i < 3000000; i++)
             __asm__ __volatile__("nop");
@@ -241,19 +265,15 @@ void kernel_main(void) {
 
     WRITE_CSR(stvec, (uint32_t)kernel_entry);
 
-    printf("\n\nHello World!\n");
-    printf("2 + 8 * 5 = %d, %x\n", 2 + 8 * 5, 0x1234abcd);
-
-    paddr_t paddr0 = alloc_pages(2);
-    paddr_t paddr1 = alloc_pages(1);
-    printf("alloc_pages test: paddr0=0x%x\n", paddr0);
-    printf("alloc_pages test: paddr1=0x%x\n", paddr1);
+    idle_proc = create_process((uint32_t)NULL);
+    idle_proc->pid = -1; // idle
+    current_proc = idle_proc;
 
     proc_a = create_process((uint32_t)proc_a_entry);
     proc_b = create_process((uint32_t)proc_b_entry);
-    proc_a_entry();
 
-    PANIC("booted!");
+    yield();
+    PANIC("switched to idle process");
 }
 
 __attribute__((section(".text.boot")))
