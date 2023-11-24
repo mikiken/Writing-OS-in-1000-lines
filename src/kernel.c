@@ -98,6 +98,7 @@ struct process *create_process(uint32_t pc) {
     if (!proc)
         PANIC("no free process slots");
 
+    // push the velue of callee-saved registers so that switch_context() can restore them
     uint32_t *sp = (uint32_t *)&proc->stack[sizeof(proc->stack)];
     *--sp = 0;            // s11
     *--sp = 0;            // s10
