@@ -25,6 +25,10 @@ void putchar(char c) {
     syscall(SYS_PUTCHAR, c, 0, 0);
 }
 
+int getchar(void) {
+    return syscall(SYS_GETCHAR, 0, 0, 0);
+}
+
 __attribute__((section(".text.start")))
 __attribute__((naked)) void
 start(void) {
