@@ -63,6 +63,7 @@ struct trap_frame {
 #define PROCS_MAX 8     // maximum number of processes
 #define PROC_UNUSED 0   // unused process control block
 #define PROC_RUNNABLE 1 // runnable process
+#define PROC_EXITED 2   // exited process
 
 struct process {
     int pid;              // process ID
