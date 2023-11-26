@@ -205,31 +205,6 @@ void yield(void) {
     switch_context(&prev->sp, &next->sp);
 }
 
-struct process *proc_a;
-struct process *proc_b;
-
-void proc_a_entry(void) {
-    printf("starting process A\n");
-    while (1) {
-        putchar('A');
-        yield();
-
-        for (int i = 0; i < 3000000; i++)
-            __asm__ __volatile__("nop");
-    }
-}
-
-void proc_b_entry(void) {
-    printf("starting process B\n");
-    while (1) {
-        putchar('B');
-        yield();
-
-        for (int i = 0; i < 3000000; i++)
-            __asm__ __volatile__("nop");
-    }
-}
-
 __attribute__((naked))
 __attribute__((aligned(4))) void
 kernel_entry(void) {
