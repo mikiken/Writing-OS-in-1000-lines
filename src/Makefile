@@ -4,7 +4,11 @@ LINKER=ld.lld
 OBJCOPY=llvm-objcopy
 
 CFLAGS=-c -std=c11 -O2 -g3 -Wall -Wextra --target=riscv32 -ffreestanding -nostdlib -mno-relax
-QEMU_OPTION=-machine virt -bios default -nographic -serial mon:stdio --no-reboot
+
+QEMU_OPTION=-machine virt -bios default -nographic -serial mon:stdio --no-reboot \
+			-d unimp,guest_errors,int,cpu_reset -D qemu.log \
+			-drive id=drive0,file=lorem.txt,format=raw \
+			-device virtio-blk-device,drive=drive0,bus=virtio-mmio-bus.0
 
 COMMON_C_SRCS=common.c
 KERNEL_C_SRCS=$(COMMON_C_SRCS) kernel.c
