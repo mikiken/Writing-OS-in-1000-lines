@@ -207,7 +207,7 @@ void yield(void) {
 }
 
 uint32_t virtio_reg_read32(unsigned offset) {
-    return *((volatile uint64_t *)(VIRTIO_BLK_PADDR + offset));
+    return *((volatile uint32_t *)(VIRTIO_BLK_PADDR + offset));
 }
 
 uint64_t virtio_reg_read64(unsigned offset) {
