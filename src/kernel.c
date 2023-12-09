@@ -371,6 +371,53 @@ void fs_init(void) {
     }
 }
 
+void fs_flush(void) {
+    // write the contents of each file in `files` to `disk`
+    memset(disk, 0, sizeof(disk));
+    unsigned offset = 0;
+    for (int file_i = 0; file_i < FILES_MAX; file_i++) {
+        struct file *file = &files[file_i];
+        if (!file->in_use)
+            continue;
+
+        struct tar_header *header = (struct tar_header *)&disk[offset];
+        memset(header, 0, sizeof(*header));
+        strcpy(header->name, file->name);
+        strcpy(header->mode, "000644");
+        strcpy(header->magic, "ustar");
+        strcpy(header->version, "00");
+        header->type = '0';
+
+        // convert file size to octal
+        int file_size = file->size;
+        int i = 0;
+        do {
+            header->size[i++] = (file_size % 8) + '0';
+            file_size /= 8;
+        } while (file_size > 0);
+
+        // calculate checksum
+        int checksum = ' ' * sizeof(header->checksum);
+        for (unsigned i = 0; i < sizeof(struct tar_header); i++)
+            checksum += (unsigned char)disk[offset + i];
+
+        for (int i = 5; i >= 0; i--) {
+            header->checksum[i] = (checksum % 8) + '0';
+            checksum /= 8;
+        }
+
+        // copy file data
+        memcpy(header->data, file->data, file->size);
+        offset += align_up(sizeof(struct tar_header) + file->size, SECTOR_SIZE);
+    }
+
+    // write the content of `disk`
+    for (unsigned sector = 0; sector < sizeof(disk) / SECTOR_SIZE; sector++)
+        read_write_disk(&disk[sector * SECTOR_SIZE], sector, true);
+
+    printf("wrote %d bytes to disk\n", sizeof(disk));
+}
+
 __attribute__((naked))
 __attribute__((aligned(4))) void
 kernel_entry(void) {
