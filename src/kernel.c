@@ -75,7 +75,7 @@ __attribute__((naked)) void user_entry(void) {
         "sret\n"
         :
         : [sepc] "r"(USER_BASE),
-          [sstatus] "r"(SSTATUS_SPIE));
+          [sstatus] "r"(SSTATUS_SPIE | SSTATUS_SUM));
 }
 
 struct process procs[PROCS_MAX];
@@ -418,6 +418,16 @@ void fs_flush(void) {
     printf("wrote %d bytes to disk\n", sizeof(disk));
 }
 
+struct file *fs_lookup(const char *filename) {
+    for (int i = 0; i < FILES_MAX; i++) {
+        struct file *file = &files[i];
+        if (!strcmp(file->name, filename))
+            return file;
+    }
+
+    return NULL;
+}
+
 __attribute__((naked))
 __attribute__((aligned(4))) void
 kernel_entry(void) {
@@ -523,6 +533,33 @@ void handle_syscall(struct trap_frame *f) {
                 yield();
             }
             break;
+        case SYS_READFILE:
+        case SYS_WRITEFILE: {
+            const char *filename = (const char *)f->a0;
+            char *buf = (char *)f->a1;
+            int len = f->a2;
+            struct file *file = fs_lookup(filename);
+            if (!file) {
+                printf("file not found: %s\n", filename);
+                f->a0 = -1;
+                break;
+            }
+
+            if (len > (int)sizeof(file->data))
+                len = file->size;
+
+            if (f->a3 == SYS_WRITEFILE) {
+                memcpy(file->data, buf, len);
+                file->size = len;
+                fs_flush();
+            }
+            else {
+                memcpy(buf, file->data, len);
+            }
+
+            f->a0 = len;
+            break;
+        }
         case SYS_EXIT:
             printf("process %d exited\n", current_proc->pid);
             current_proc->state = PROC_EXITED;

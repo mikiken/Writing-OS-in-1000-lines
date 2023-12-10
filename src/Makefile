@@ -18,7 +18,7 @@ KERNEL_OBJS=$(KERNEL_C_SRCS:.c=.o)
 SHELL_OBJS=$(SHELL_C_SRCS:.c=.o)
 
 image: disk/*
-				cd disk && tar cf ../disk.tar --format=ustar ./*.txt
+				cd disk && tar cf ../disk.tar --format=ustar *.txt
 				
 shell: $(SHELL_C_SRCS) user.ld
 				$(CC) $(CFLAGS) $(SHELL_C_SRCS)
